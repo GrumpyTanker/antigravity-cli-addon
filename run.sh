@@ -30,4 +30,4 @@ echo "Ingress URL is $INGRESS_URL"
 echo "Starting ttyd on port 8099 with Antigravity CLI..."
 
 # Run the CLI
-exec ttyd -W -p 8099 /usr/local/bin/agy
+exec ttyd -p 8099 /usr/local/bin/agy
