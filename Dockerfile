@@ -13,9 +13,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY upload.py /opt/antigravity/upload.py
 COPY index.html /opt/antigravity/html/index.html
 COPY logo.png /opt/antigravity/html/logo.png
-COPY start.sh /opt/antigravity/start.sh
 COPY attach.sh /opt/antigravity/attach.sh
-RUN chmod +x /opt/antigravity/start.sh /opt/antigravity/attach.sh
+RUN chmod +x /opt/antigravity/attach.sh
 
 # Set HOME for persistence and default directory
 ENV HOME=/data
