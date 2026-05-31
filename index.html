@@ -172,135 +172,41 @@
       }, 5000);
     }
 
-    // Momentum Touch Scroll Engine for mobile devices
+    // Enable native touch scrolling inside xterm.js
+    // xterm.js has an internal .xterm-viewport div with overflow-y:scroll.
+    // By injecting -webkit-overflow-scrolling:touch and removing xterm's
+    // touch event interception, we get 100% native iOS/Android momentum scroll.
     const iframe = document.getElementById('term-frame');
     iframe.onload = () => {
       try {
-        const iframeWin = iframe.contentWindow;
-        const iframeDoc = iframeWin.document;
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         
         const interval = setInterval(() => {
-          const xterm = iframeDoc.querySelector('.xterm');
-          if (xterm) {
+          const viewport = iframeDoc.querySelector('.xterm-viewport');
+          if (viewport) {
             clearInterval(interval);
             
-            // --- Physics constants ---
-            const FRICTION = 0.92;           // Velocity multiplier per frame (lower = more friction)
-            const MIN_VELOCITY = 0.5;        // Stop threshold (px/frame)
-            const PIXELS_PER_LINE = 20;      // How many px of accumulated scroll = 1 terminal line
-            const VELOCITY_SCALE = 1.0;      // Scale factor for initial velocity
-            
-            // --- State ---
-            let lastY = 0;
-            let lastTime = 0;
-            let velocity = 0;
-            let accumulator = 0;
-            let animationId = null;
-            let tracking = false;
-            
-            function fireScrollLines(lines) {
-              const direction = Math.sign(lines);
-              const count = Math.abs(lines);
-              for (let i = 0; i < count; i++) {
-                const evt = new WheelEvent('wheel', {
-                  deltaY: direction * 100,
-                  deltaX: 0,
-                  deltaMode: 0,
-                  bubbles: true,
-                  cancelable: true,
-                  view: iframeWin
-                });
-                xterm.dispatchEvent(evt);
+            // Inject CSS for native touch momentum scrolling
+            const style = iframeDoc.createElement('style');
+            style.textContent = `
+              .xterm-viewport {
+                -webkit-overflow-scrolling: touch !important;
+                overflow-y: scroll !important;
               }
+              /* Prevent xterm's screen element from capturing touch events */
+              .xterm-screen {
+                touch-action: pan-y !important;
+              }
+            `;
+            iframeDoc.head.appendChild(style);
+            
+            // Remove xterm.js's touch event listeners that prevent native scroll.
+            // We clone the screen element to strip all JS-attached listeners.
+            const screen = iframeDoc.querySelector('.xterm-screen');
+            if (screen) {
+              const clone = screen.cloneNode(true);
+              screen.parentNode.replaceChild(clone, screen);
             }
-            
-            function processAccumulator() {
-              if (Math.abs(accumulator) >= PIXELS_PER_LINE) {
-                const lines = Math.floor(Math.abs(accumulator) / PIXELS_PER_LINE);
-                const sign = Math.sign(accumulator);
-                fireScrollLines(sign * lines);
-                accumulator -= sign * lines * PIXELS_PER_LINE;
-              }
-            }
-            
-            function momentumLoop() {
-              velocity *= FRICTION;
-              
-              if (Math.abs(velocity) < MIN_VELOCITY) {
-                velocity = 0;
-                animationId = null;
-                return;
-              }
-              
-              accumulator += velocity;
-              processAccumulator();
-              
-              animationId = iframeWin.requestAnimationFrame(momentumLoop);
-            }
-            
-            function stopMomentum() {
-              if (animationId !== null) {
-                iframeWin.cancelAnimationFrame(animationId);
-                animationId = null;
-              }
-              velocity = 0;
-              accumulator = 0;
-            }
-            
-            xterm.addEventListener('touchstart', (e) => {
-              if (e.touches.length === 1) {
-                stopMomentum();
-                lastY = e.touches[0].clientY;
-                lastTime = performance.now();
-                velocity = 0;
-                tracking = true;
-              }
-            }, { passive: false, capture: true });
-            
-            xterm.addEventListener('touchmove', (e) => {
-              if (!tracking || e.touches.length !== 1) return;
-              
-              const currentY = e.touches[0].clientY;
-              const now = performance.now();
-              const dt = now - lastTime;
-              const deltaY = lastY - currentY; // positive = scroll down (finger up)
-              
-              // Track velocity (px per 16ms frame equivalent)
-              if (dt > 0) {
-                const instantVelocity = (deltaY / dt) * 16;
-                // Smooth velocity with weighted average
-                velocity = velocity * 0.2 + instantVelocity * 0.8;
-              }
-              
-              lastY = currentY;
-              lastTime = now;
-              
-              // Immediate scroll during drag
-              accumulator += deltaY;
-              processAccumulator();
-              
-              e.preventDefault();
-              e.stopImmediatePropagation();
-            }, { passive: false, capture: true });
-            
-            xterm.addEventListener('touchend', (e) => {
-              if (!tracking) return;
-              tracking = false;
-              
-              // Apply velocity scale
-              velocity *= VELOCITY_SCALE;
-              
-              // Start momentum animation if fast enough
-              if (Math.abs(velocity) > MIN_VELOCITY) {
-                accumulator = 0;
-                animationId = iframeWin.requestAnimationFrame(momentumLoop);
-              }
-            }, { passive: false, capture: true });
-            
-            xterm.addEventListener('touchcancel', () => {
-              tracking = false;
-              stopMomentum();
-            }, { passive: false, capture: true });
           }
         }, 500);
       } catch(err) {
