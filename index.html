@@ -172,45 +172,95 @@
       }, 5000);
     }
 
-    // Enable native touch scrolling inside xterm.js
-    // Strategy: inject CSS to tell the browser to handle vertical pan natively,
-    // then intercept touch events at capture phase (passive) to stop them from
-    // reaching xterm.js's handlers, without breaking canvas rendering or keyboard.
+    // Momentum touch scroll for mobile devices.
+    // xterm.js uses canvas rendering with JS-managed scrolling, so native CSS
+    // scroll is impossible. We simulate iOS-like momentum with physics.
     const iframe = document.getElementById('term-frame');
     iframe.onload = () => {
       try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const iframeWin = iframe.contentWindow;
+        const iframeDoc = iframeWin.document;
         
         const interval = setInterval(() => {
-          const viewport = iframeDoc.querySelector('.xterm-viewport');
-          if (viewport) {
+          const xterm = iframeDoc.querySelector('.xterm');
+          if (xterm) {
             clearInterval(interval);
             
-            // 1. Inject CSS for native touch momentum
-            const style = iframeDoc.createElement('style');
-            style.textContent = `
-              .xterm-viewport {
-                -webkit-overflow-scrolling: touch !important;
-                overflow-y: scroll !important;
-              }
-              .xterm-screen {
-                touch-action: pan-y !important;
-              }
-            `;
-            iframeDoc.head.appendChild(style);
+            const FRICTION = 0.95;
+            const MIN_VELOCITY = 0.3;
+            const PX_PER_LINE = 15;
             
-            // 2. Intercept touch events at capture phase so they never reach
-            //    xterm.js's handlers (which would call preventDefault and kill
-            //    native scroll). Using passive:true tells the browser we won't
-            //    block, so it can start native scrolling immediately.
-            const screen = iframeDoc.querySelector('.xterm-screen');
-            if (screen) {
-              ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(evt => {
-                screen.addEventListener(evt, (e) => {
-                  e.stopPropagation();
-                }, { capture: true, passive: true });
-              });
+            let lastY = 0, lastTime = 0, velocity = 0;
+            let accumulator = 0, animId = null, tracking = false;
+            
+            function scrollLines(n) {
+              const dir = Math.sign(n);
+              for (let i = 0; i < Math.abs(n); i++) {
+                xterm.dispatchEvent(new WheelEvent('wheel', {
+                  deltaY: dir * 100, deltaMode: 0,
+                  bubbles: true, cancelable: true, view: iframeWin
+                }));
+              }
             }
+            
+            function flush() {
+              if (Math.abs(accumulator) >= PX_PER_LINE) {
+                const n = Math.floor(Math.abs(accumulator) / PX_PER_LINE);
+                scrollLines(Math.sign(accumulator) * n);
+                accumulator -= Math.sign(accumulator) * n * PX_PER_LINE;
+              }
+            }
+            
+            function coast() {
+              velocity *= FRICTION;
+              if (Math.abs(velocity) < MIN_VELOCITY) { animId = null; return; }
+              accumulator += velocity;
+              flush();
+              animId = iframeWin.requestAnimationFrame(coast);
+            }
+            
+            function stop() {
+              if (animId) { iframeWin.cancelAnimationFrame(animId); animId = null; }
+              velocity = 0; accumulator = 0;
+            }
+            
+            xterm.addEventListener('touchstart', (e) => {
+              if (e.touches.length !== 1) return;
+              stop();
+              lastY = e.touches[0].clientY;
+              lastTime = performance.now();
+              tracking = true;
+            }, { passive: false, capture: true });
+            
+            xterm.addEventListener('touchmove', (e) => {
+              if (!tracking || e.touches.length !== 1) return;
+              const y = e.touches[0].clientY;
+              const now = performance.now();
+              const dt = now - lastTime;
+              const dy = lastY - y;
+              if (dt > 0) {
+                const v = (dy / dt) * 16;
+                velocity = velocity * 0.3 + v * 0.7;
+              }
+              lastY = y; lastTime = now;
+              accumulator += dy;
+              flush();
+              e.preventDefault();
+              e.stopImmediatePropagation();
+            }, { passive: false, capture: true });
+            
+            xterm.addEventListener('touchend', () => {
+              if (!tracking) return;
+              tracking = false;
+              if (Math.abs(velocity) > MIN_VELOCITY) {
+                accumulator = 0;
+                animId = iframeWin.requestAnimationFrame(coast);
+              }
+            }, { passive: false, capture: true });
+            
+            xterm.addEventListener('touchcancel', () => {
+              tracking = false; stop();
+            }, { passive: false, capture: true });
           }
         }, 500);
       } catch(err) {
