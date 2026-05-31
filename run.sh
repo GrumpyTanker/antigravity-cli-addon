@@ -27,9 +27,13 @@ INGRESS_URL=$(curl -s -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" http://supe
 INGRESS_URL=${INGRESS_URL%/}
 
 echo "Ingress URL is $INGRESS_URL"
-echo "Starting ttyd on port 8099 with Antigravity CLI..."
+# Start Python Upload server on port 8097
+python3 /opt/antigravity/upload.py &
 
-# Run the CLI
+# Run the CLI via ttyd on port 8098 (background)
 export COLORTERM=truecolor
 export TERM=xterm-256color
-exec ttyd -t enableZmodem=true -t "theme={'background': '#0c0c0c'}" -p 8099 tmux -u new-session -A -s antigravity /usr/local/bin/agy
+ttyd -b /ttyd -t enableZmodem=true -t "theme={'background': '#000000'}" -p 8098 tmux -u new-session -A -s antigravity /usr/local/bin/agy &
+
+echo "Starting NGINX reverse proxy on port 8099..."
+exec nginx -c /etc/nginx/nginx.conf -g "daemon off;"
