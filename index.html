@@ -172,9 +172,10 @@
       }, 5000);
     }
 
-    // Momentum touch scroll for mobile devices.
-    // xterm.js uses canvas rendering with JS-managed scrolling, so native CSS
-    // scroll is impossible. We simulate iOS-like momentum with physics.
+    // Smooth touch scroll via direct scrollTop manipulation.
+    // Instead of dispatching WheelEvents (which cause discrete line jumps),
+    // we directly set .xterm-viewport.scrollTop pixel by pixel.
+    // xterm.js watches scrollTop via a 'scroll' event and updates smoothly.
     const iframe = document.getElementById('term-frame');
     iframe.onload = () => {
       try {
@@ -182,49 +183,30 @@
         const iframeDoc = iframeWin.document;
         
         const interval = setInterval(() => {
-          const xterm = iframeDoc.querySelector('.xterm');
-          if (xterm) {
+          const viewport = iframeDoc.querySelector('.xterm-viewport');
+          const screen = iframeDoc.querySelector('.xterm-screen');
+          if (viewport && screen) {
             clearInterval(interval);
             
-            const FRICTION = 0.95;
+            const FRICTION = 0.97;
             const MIN_VELOCITY = 0.3;
-            const PX_PER_LINE = 15;
             
             let lastY = 0, lastTime = 0, velocity = 0;
-            let accumulator = 0, animId = null, tracking = false;
-            
-            function scrollLines(n) {
-              const dir = Math.sign(n);
-              for (let i = 0; i < Math.abs(n); i++) {
-                xterm.dispatchEvent(new WheelEvent('wheel', {
-                  deltaY: dir * 100, deltaMode: 0,
-                  bubbles: true, cancelable: true, view: iframeWin
-                }));
-              }
-            }
-            
-            function flush() {
-              if (Math.abs(accumulator) >= PX_PER_LINE) {
-                const n = Math.floor(Math.abs(accumulator) / PX_PER_LINE);
-                scrollLines(Math.sign(accumulator) * n);
-                accumulator -= Math.sign(accumulator) * n * PX_PER_LINE;
-              }
-            }
+            let animId = null, tracking = false;
             
             function coast() {
               velocity *= FRICTION;
               if (Math.abs(velocity) < MIN_VELOCITY) { animId = null; return; }
-              accumulator += velocity;
-              flush();
+              viewport.scrollTop += velocity;
               animId = iframeWin.requestAnimationFrame(coast);
             }
             
             function stop() {
               if (animId) { iframeWin.cancelAnimationFrame(animId); animId = null; }
-              velocity = 0; accumulator = 0;
+              velocity = 0;
             }
             
-            xterm.addEventListener('touchstart', (e) => {
+            screen.addEventListener('touchstart', (e) => {
               if (e.touches.length !== 1) return;
               stop();
               lastY = e.touches[0].clientY;
@@ -232,33 +214,37 @@
               tracking = true;
             }, { passive: false, capture: true });
             
-            xterm.addEventListener('touchmove', (e) => {
+            screen.addEventListener('touchmove', (e) => {
               if (!tracking || e.touches.length !== 1) return;
               const y = e.touches[0].clientY;
               const now = performance.now();
               const dt = now - lastTime;
-              const dy = lastY - y;
+              const dy = lastY - y; // positive = finger up = scroll down
+              
+              // Track velocity for momentum
               if (dt > 0) {
-                const v = (dy / dt) * 16;
-                velocity = velocity * 0.3 + v * 0.7;
+                const v = (dy / dt) * 16; // normalize to ~60fps
+                velocity = velocity * 0.2 + v * 0.8;
               }
-              lastY = y; lastTime = now;
-              accumulator += dy;
-              flush();
+              
+              // Move viewport immediately
+              viewport.scrollTop += dy;
+              
+              lastY = y;
+              lastTime = now;
               e.preventDefault();
               e.stopImmediatePropagation();
             }, { passive: false, capture: true });
             
-            xterm.addEventListener('touchend', () => {
+            screen.addEventListener('touchend', () => {
               if (!tracking) return;
               tracking = false;
               if (Math.abs(velocity) > MIN_VELOCITY) {
-                accumulator = 0;
                 animId = iframeWin.requestAnimationFrame(coast);
               }
             }, { passive: false, capture: true });
             
-            xterm.addEventListener('touchcancel', () => {
+            screen.addEventListener('touchcancel', () => {
               tracking = false; stop();
             }, { passive: false, capture: true });
           }
