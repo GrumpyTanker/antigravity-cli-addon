@@ -30,4 +30,6 @@ echo "Ingress URL is $INGRESS_URL"
 echo "Starting ttyd on port 8099 with Antigravity CLI..."
 
 # Run the CLI
-exec ttyd -p 8099 /usr/local/bin/agy
+export COLORTERM=truecolor
+export TERM=xterm-256color
+exec ttyd -p 8099 env COLORTERM=truecolor TERM=xterm-256color /usr/local/bin/agy
