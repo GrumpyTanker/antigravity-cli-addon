@@ -213,13 +213,16 @@
               observer.observe(xtermContainer, { childList: true });
             }
             
-            const FRICTION = 0.97;
+            const FRICTION = 0.95; // Lower friction for longer coasting
             const MIN_VELOCITY = 0.1;
             
             let lastY = 0, velocity = 0;
             let animId = null, tracking = false;
             let lastAnimTime = 0;
             let touchHistory = [];
+            
+            // Prevent browser from stealing the swipe and firing touchcancel
+            screen.style.touchAction = 'none';
             
             function coast(time) {
               if (!lastAnimTime) lastAnimTime = time;
@@ -232,14 +235,16 @@
               if (Math.abs(velocity) < MIN_VELOCITY) { animId = null; return; }
               
               viewport.scrollTop += velocity * frames;
-              animId = iframeWin.requestAnimationFrame(coast);
+              animId = window.requestAnimationFrame(coast);
             }
 
             screen.addEventListener('touchstart', (e) => {
               if (animId) {
-                iframeWin.cancelAnimationFrame(animId);
+                window.cancelAnimationFrame(animId);
                 animId = null;
               }
+              if (e.touches.length !== 1) return;
+              
               tracking = true;
               lastY = e.touches[0].clientY;
               velocity = 0;
@@ -262,7 +267,7 @@
               e.stopImmediatePropagation();
             }, { passive: false, capture: true });
             
-            screen.addEventListener('touchend', () => {
+            const handleTouchEnd = () => {
               if (!tracking) return;
               tracking = false;
               
@@ -286,13 +291,12 @@
               
               if (Math.abs(velocity) > MIN_VELOCITY) {
                 lastAnimTime = 0;
-                animId = iframeWin.requestAnimationFrame(coast);
+                animId = window.requestAnimationFrame(coast);
               }
-            }, { passive: false, capture: true });
+            };
             
-            screen.addEventListener('touchcancel', () => {
-              tracking = false; 
-            }, { passive: false, capture: true });
+            screen.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+            screen.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
             
             [100, 300, 600, 1000].forEach(delay => {
               setTimeout(() => {
