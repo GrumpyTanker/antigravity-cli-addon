@@ -315,6 +315,12 @@
   </div>
   <div id="terminal-container">
     <iframe id="term-frame"></iframe>
+    <div id="login-banner" style="display: none; position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #4285F4, #34A853); color: white; padding: 10px 16px; border-radius: 20px; font-weight: 500; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; font-family: sans-serif;" onclick="openLoginUrl()" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="pointer-events: none; margin-right: 4px;">
+        <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.472 0-6.27-2.798-6.27-6.27 0-3.472 2.798-6.27 6.27-6.27 1.63 0 3.09.62 4.22 1.63L21.3 4.12C19.01 2.05 15.93 1 12.24 1c-6.07 0-11 4.93-11 11s4.93 11 11 11c6.35 0 10.56-4.45 10.56-10.74 0-.73-.08-1.4-.24-1.97H12.24z"/>
+      </svg>
+      <span>Iniciar sesión con Google</span>
+    </div>
   </div>
   
   <div id="notification"></div>
@@ -456,6 +462,30 @@
         }
       } catch(e) {}
     }
+    
+    let currentLoginUrl = "";
+    async function checkLoginUrl() {
+      try {
+        const res = await fetch('get_login_url?session_id=' + currentSessionId);
+        const data = await res.json();
+        const banner = document.getElementById('login-banner');
+        if (data.url) {
+          currentLoginUrl = data.url;
+          banner.style.display = 'flex';
+        } else {
+          banner.style.display = 'none';
+        }
+      } catch(e) {}
+    }
+
+    window.openLoginUrl = function() {
+      if (currentLoginUrl) {
+        window.open(currentLoginUrl, '_blank');
+      }
+    };
+
+    // Poll every 3 seconds for Google Auth URLs on screen
+    setInterval(checkLoginUrl, 3000);
     
     async function installUpdate() {
       const banner = document.getElementById('update-banner');
