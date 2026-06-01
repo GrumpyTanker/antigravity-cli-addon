@@ -96,46 +96,33 @@
     }
     
     #upload-btn {
-      background-color: #1d4ed8;
-      /* "boton fundido" backup:
-         radial-gradient(circle at 0% 0%, #facc15 0%, transparent 50%),
-         radial-gradient(circle at 50% 0%, #f97316 0%, transparent 50%),
-         radial-gradient(circle at 100% 0%, #ef4444 0%, transparent 50%),
-         radial-gradient(circle at 0% 35%, #22c55e 0%, transparent 45%),
-         radial-gradient(circle at 100% 35%, #a855f7 0%, transparent 45%),
-         radial-gradient(circle at 0% 100%, #38bdf8 0%, transparent 80%);
-      */
-      background-image:
-        radial-gradient(ellipse 80% 55% at 0% 0%, #facc15 0%, transparent 100%),
-        radial-gradient(ellipse 80% 55% at 100% 0%, #ef4444 0%, transparent 100%),
-        radial-gradient(ellipse 60% 45% at 0% 30%, #22c55e 0%, transparent 100%),
-        radial-gradient(ellipse 60% 45% at 100% 30%, #a855f7 0%, transparent 100%),
-        radial-gradient(ellipse 100% 70% at 0% 100%, #38bdf8 0%, transparent 100%);
-      color: white;
+      background: #2a2b2e;
+      color: #9aa0a6;
       border: none;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-      padding: 4px 10px;
-      border-radius: 6px;
+      padding: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 10px;
-      font-weight: 500;
-      line-height: 1.1;
-      text-align: center;
-      transition: opacity 0.2s;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 34px;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
     }
     
     #upload-btn:hover {
-      opacity: 0.9;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    
+    #upload-btn:active {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(0.92);
     }
     
     #upload-btn:disabled {
-      background: #333333;
-      color: #8b949e;
+      background: #1a1a1a;
+      color: #555555;
       cursor: not-allowed;
     }
     
@@ -278,10 +265,12 @@
         margin-left: 6px !important;
       }
       #upload-btn {
-        padding: 0 4px !important;
+        width: 33px;
         height: 36px;
-        font-size: 9px;
-        line-height: 1.1;
+      }
+      #upload-btn svg {
+        width: 18px;
+        height: 18px;
       }
     }
   </style>
@@ -328,7 +317,13 @@
     
     <div class="footer-right">
       <input type="file" id="file" style="display: none;" onchange="uploadImage()">
-      <button id="upload-btn" onclick="document.getElementById('file').click()"><span>Upload</span><span>Image</span></button>
+      <button id="upload-btn" onclick="document.getElementById('file').click()" title="Upload Image">
+        <svg style="pointer-events: none;" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -485,7 +480,7 @@
         showNotification("Network failed during upload");
       }
       
-      btn.innerHTML = originalText;
+      btn.innerHTML = `<svg style="pointer-events: none;" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
       btn.disabled = false;
       fileInput.value = '';
     }
