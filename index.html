@@ -242,37 +242,31 @@
               
               animId = iframeWin.requestAnimationFrame(coast);
             }
-            
-            function stop() {
-              if (animId) { iframeWin.cancelAnimationFrame(animId); animId = null; }
-              velocity = 0;
-            }
-            
+
             screen.addEventListener('touchstart', (e) => {
-              if (e.touches.length !== 1) return;
-              stop();
-              lastY = e.touches[0].clientY;
-              lastTime = performance.now();
+              if (animId) {
+                iframeWin.cancelAnimationFrame(animId);
+                animId = null;
+              }
               tracking = true;
-            }, { passive: false, capture: true });
-            
+              lastY = e.touches[0].clientY;
+              velocity = 0;
+              touchHistory = [{ y: lastY, time: performance.now() }];
+            }, { passive: true, capture: true });
+
             screen.addEventListener('touchmove', (e) => {
-              if (!tracking || e.touches.length !== 1) return;
+              if (!tracking) return;
               const y = e.touches[0].clientY;
               const now = performance.now();
-              const dt = now - lastTime;
               const dy = lastY - y; // positive = finger up = scroll down
               
-              // Track velocity (pixels per 16ms frame)
-              if (dt > 0) {
-                const v = (dy / dt) * 16.666;
-                velocity = velocity * 0.2 + v * 0.8;
-              }
-              
-              viewport.scrollTop += dy;
+              touchHistory.push({ y: y, time: now });
+              // Keep only the history from the last 100ms
+              touchHistory = touchHistory.filter(point => now - point.time < 100);
               
               lastY = y;
-              lastTime = now;
+              viewport.scrollTop += dy;
+              
               e.preventDefault();
               e.stopImmediatePropagation();
             }, { passive: false, capture: true });
@@ -280,6 +274,27 @@
             screen.addEventListener('touchend', () => {
               if (!tracking) return;
               tracking = false;
+              
+              // Calculate velocity over the recorded history window (up to 100ms)
+              const now = performance.now();
+              // If the finger rested on the screen for >100ms without moving, history might be empty or just the current point.
+              touchHistory = touchHistory.filter(point => now - point.time < 100);
+              
+              if (touchHistory.length > 1) {
+                const oldest = touchHistory[0];
+                const newest = touchHistory[touchHistory.length - 1];
+                const dt = newest.time - oldest.time;
+                const dy = oldest.y - newest.y; // total distance moved in that time
+                
+                if (dt > 0) {
+                  velocity = (dy / dt) * 16.666; // pixels per 16ms frame
+                } else {
+                  velocity = 0;
+                }
+              } else {
+                velocity = 0;
+              }
+              
               if (Math.abs(velocity) > MIN_VELOCITY) {
                 lastAnimTime = 0;
                 animId = iframeWin.requestAnimationFrame(coast);
@@ -287,7 +302,7 @@
             }, { passive: false, capture: true });
             
             screen.addEventListener('touchcancel', () => {
-              tracking = false; stop();
+              tracking = false; 
             }, { passive: false, capture: true });
             
             // Force scroll to bottom on load (as data streams in from ttyd)
