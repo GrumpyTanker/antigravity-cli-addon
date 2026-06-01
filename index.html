@@ -100,6 +100,61 @@
       opacity: 1;
       pointer-events: auto;
     }
+    
+    #mobile-toolbar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(30, 30, 30, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    
+    #mobile-toolbar.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      padding: 0;
+      transition: background 0.1s, transform 0.1s;
+    }
+    
+    .tool-btn:active {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(0.92);
+    }
+    
+    /* Auto-hide on desktop screens */
+    @media (min-width: 768px) {
+      #mobile-toolbar {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -115,6 +170,15 @@
   </div>
   
   <div id="notification"></div>
+  
+  <div id="mobile-toolbar">
+    <button class="tool-btn" data-key="Tab" data-code="9">⇥</button>
+    <button class="tool-btn" data-key="ArrowLeft" data-code="37">←</button>
+    <button class="tool-btn" data-key="ArrowUp" data-code="38">↑</button>
+    <button class="tool-btn" data-key="ArrowDown" data-code="40">↓</button>
+    <button class="tool-btn" data-key="ArrowRight" data-code="39">→</button>
+    <button class="tool-btn" data-key="c" data-code="67" data-ctrl="true">C</button>
+  </div>
   
   <div id="terminal-container">
     <iframe src="ttyd/" id="term-frame"></iframe>
@@ -176,6 +240,33 @@
       try {
         const iframeWin = iframe.contentWindow;
         const iframeDoc = iframeWin.document;
+        
+        const toolbar = document.getElementById('mobile-toolbar');
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+           toolbar.classList.add('show');
+        }
+        
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          const handler = (e) => {
+            e.preventDefault(); // Keep focus on iframe
+            const key = btn.getAttribute('data-key');
+            const code = parseInt(btn.getAttribute('data-code'));
+            const isCtrl = btn.getAttribute('data-ctrl') === 'true';
+            
+            const target = iframeDoc.querySelector('.xterm-helper-textarea') || iframeDoc.querySelector('.xterm-screen');
+            if (target) {
+              target.dispatchEvent(new KeyboardEvent('keydown', {
+                key: key,
+                code: key, // For simplicity using key as code
+                keyCode: code,
+                ctrlKey: isCtrl,
+                bubbles: true
+              }));
+            }
+          };
+          btn.addEventListener('touchstart', handler, { passive: false });
+          btn.addEventListener('mousedown', handler);
+        });
         
         const interval = setInterval(() => {
           const viewport = iframeDoc.querySelector('.xterm-viewport');
