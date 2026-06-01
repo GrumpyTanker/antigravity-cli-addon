@@ -268,8 +268,22 @@
           if (viewport && screen) {
             clearInterval(interval);
             
+            const fixTextarea = () => {
+              const ta = iframeDoc.querySelector('.xterm-helper-textarea');
+              if (ta && !ta.dataset.fixed) {
+                ta.dataset.fixed = "true";
+                ta.setAttribute('autocomplete', 'off');
+                ta.setAttribute('autocorrect', 'off');
+                ta.setAttribute('autocapitalize', 'off');
+                ta.setAttribute('spellcheck', 'false');
+                ta.setAttribute('data-gramm', 'false');
+              }
+            };
+            fixTextarea();
+            
             // Auto-hide resize banners and auto-reconnect on disconnect.
             const observer = new MutationObserver((mutations) => {
+              fixTextarea();
               mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
                   if (node.nodeType === 1 && node.tagName === 'DIV' && !node.className) {
