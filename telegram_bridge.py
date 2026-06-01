@@ -96,38 +96,46 @@ def download_file(url, dest_path):
 
 def pexpect_thread():
     global child
-    # Telegram gets its own dedicated and isolated CLI session
-    child = pexpect.spawn('/usr/local/bin/agy', env={"NO_COLOR": "1", "TERM": "dumb", **os.environ}, encoding='utf-8', dimensions=(50, 100))
-    
-    buffer = ""
-    last_typing_time = 0
-    
     while True:
         try:
-            # Read in chunks, waiting up to 1.0s for more data to prevent fragmented messages
-            chunk = child.read_nonblocking(size=4096, timeout=1.0)
-            buffer += chunk
+            # Telegram gets its own dedicated and isolated CLI session
+            child = pexpect.spawn('/usr/local/bin/agy', env={"NO_COLOR": "1", "TERM": "xterm-256color", **os.environ}, encoding='utf-8', dimensions=(50, 100))
             
-            current_time = time.time()
-            if len(buffer) > 0 and current_time - last_typing_time > 3:
-                send_typing_action()
-                last_typing_time = current_time
-                
-        except pexpect.TIMEOUT:
-            # When output pauses for 1.0s, process and send the buffer if it has content
-            if buffer.strip():
-                clean = clean_text(buffer)
-                # Filter out the empty CLI prompts to reduce noise in Telegram
-                if clean and not clean.endswith("For shortcuts"):
-                    # We send as plain native text (no code block, no markdown escaping needed)
-                    send_message(clean)
-                buffer = ""
-        except pexpect.EOF:
-            print("Pexpect EOF")
-            break
+            buffer = ""
+            last_typing_time = 0
+            
+            while True:
+                try:
+                    # Read in chunks, waiting up to 1.0s for more data to prevent fragmented messages
+                    chunk = child.read_nonblocking(size=4096, timeout=1.0)
+                    buffer += chunk
+                    
+                    current_time = time.time()
+                    if len(buffer) > 0 and current_time - last_typing_time > 3:
+                        send_typing_action()
+                        last_typing_time = current_time
+                        
+                except pexpect.TIMEOUT:
+                    # When output pauses for 1.0s, process and send the buffer if it has content
+                    if buffer.strip():
+                        clean = clean_text(buffer)
+                        # Filter out the empty CLI prompts to reduce noise in Telegram
+                        if clean and not clean.endswith("For shortcuts"):
+                            # We send as plain native text (no code block, no markdown escaping needed)
+                            send_message(clean)
+                        buffer = ""
+                except pexpect.EOF:
+                    print("CLI Process EOF (Died)")
+                    break
+                except Exception as e:
+                    print(f"CLI Process Read Error: {e}")
+                    break
+                    
         except Exception as e:
-            print(f"Pexpect error: {e}")
-            break
+            print(f"Failed to spawn CLI: {e}")
+            
+        print("Restarting CLI session in 3 seconds...")
+        time.sleep(3)
 
 def poll_telegram():
     global child
