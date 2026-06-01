@@ -15,8 +15,8 @@ COPY index.html /opt/antigravity/html/index.html
 COPY logo.png /opt/antigravity/html/logo.png
 COPY attach.sh /opt/antigravity/attach.sh
 COPY tmux.conf /etc/tmux.conf
-COPY telegram_bridge.py /opt/antigravity/telegram_bridge.py
-RUN chmod +x /opt/antigravity/attach.sh /opt/antigravity/telegram_bridge.py
+
+RUN chmod +x /opt/antigravity/attach.sh
 
 # Set HOME for persistence and default directory
 ENV HOME=/data
