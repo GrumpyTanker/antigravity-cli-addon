@@ -188,10 +188,12 @@
           if (viewport && screen) {
             clearInterval(interval);
             
-            // Hide any ttyd resize banners via CSS just to be absolutely sure
+            // Hide the ttyd resize banner. It doesn't have a class or ID, 
+            // but it has a specific inline style we can target.
             const style = iframeDoc.createElement('style');
             style.textContent = `
-              #overlay, .ttyd-overlay, .xterm-overlay, div[class*="overlay"] { 
+              .xterm > div[style*="border-radius: 15px"],
+              .xterm > div[style*="font-size: xx-large"] { 
                 display: none !important; 
                 opacity: 0 !important;
                 visibility: hidden !important;
