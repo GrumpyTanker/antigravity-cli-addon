@@ -909,9 +909,9 @@
         });
         
         if (res.ok) {
-          notification.innerText = 'Backup Restored! Please completely restart the Add-on in Home Assistant for changes to take effect.';
+          notification.innerText = 'Backup Restored! Add-on will reboot automatically.';
           notification.style.background = '#155724';
-          alert('Backup Restored Successfully!\n\nPlease go to the Home Assistant Supervisor panel and RESTART the Antigravity CLI Add-on for the memory and configurations to load properly.');
+          alert('Backup Restored Successfully!\n\nThe Antigravity Add-on will now reboot automatically to apply your settings and memories. It will be back online in just a few seconds.');
         } else {
           const err = await res.json();
           notification.innerText = 'Import Failed: ' + (err.error || 'Unknown error');
