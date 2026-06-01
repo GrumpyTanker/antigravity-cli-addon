@@ -576,7 +576,6 @@
 
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      toggleContextMenu(e);
     });
 
     let notifTimeout;
@@ -699,7 +698,6 @@
 
             iframeDoc.addEventListener('contextmenu', (e) => {
               e.preventDefault();
-              window.toggleContextMenu(e);
             });
             // Auto-hide resize banners and auto-reconnect on disconnect.
             const observer = new MutationObserver((mutations) => {
