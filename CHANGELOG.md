@@ -2,7 +2,10 @@
 
 All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
 
-## [1.7.7 / localdev]
+## [1.7.7]
+- feat: implement automatic addon restart on successful backup restore
+- feat: add Import/Export backup tool for agent memory and addon configs
+- docs: use python script to generate full chronological changelog with all version tags
 - docs: restore rich README.md and write exhaustive CHANGELOG.md
 - docs: generate comprehensive README and CHANGELOG
 - style: use kbd badges for shortcut legend
@@ -17,8 +20,6 @@ All notable changes to the Antigravity CLI Home Assistant Add-on will be documen
 - style: increase size of shortcut text
 - style: make shortcut text smaller and hide on mobile
 - style: revert shortcuts to context menu and remove separators
-
-## [localdev]
 - fix: restore localdev version
 - feat: add copy/paste text info and move shortcuts to footer
 - fix: move paste to context menu and fix shortcut events
