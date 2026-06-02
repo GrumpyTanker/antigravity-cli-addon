@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.3]
+- fix: reduce backup upload chunk size to 10MB to comply with Home Assistant Ingress hard 16MB request body limit
+
 ## [1.8.2]
 - feat: implement 100MB chunked multipart uploads to bypass Home Assistant Ingress timeout and memory limits for massive backups
 
