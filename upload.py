@@ -152,7 +152,7 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             
             targets = []
             if os.path.exists("/root/.gemini"): targets.append("root/.gemini")
-            if os.path.exists("/data"): targets.append("data")
+            if os.path.exists("/data/.gemini"): targets.append("data/.gemini")
             if os.path.exists("/config/.gemini"): targets.append("config/.gemini")
             
             if targets:
