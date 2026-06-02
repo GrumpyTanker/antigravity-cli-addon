@@ -1,22 +1,15 @@
 #!/bin/bash
 SESSION_ID=${1:-1}
-SESSION_NAME="agy_${SESSION_ID}"
+SESSION_LOG="/data/session_${SESSION_ID}.log"
+SOCKET="/tmp/agy_${SESSION_ID}.socket"
 
-# tmux config: no status bar, truecolor support
 export TERM=xterm-256color
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANGUAGE=en_US:en
 
-# If session exists, attach to it. Otherwise, create it.
-if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-    exec tmux attach-session -t "$SESSION_NAME"
-else
-    exec tmux new-session -s "$SESSION_NAME" \
-        -e "COLORTERM=truecolor" \
-        -e "TERM=xterm-256color" \
-        -e "LANG=en_US.UTF-8" \
-        -e "LC_ALL=en_US.UTF-8" \
-        -e "LANGUAGE=en_US:en" \
-        /usr/local/bin/agy
+if [ -f "$SESSION_LOG" ]; then
+    cat "$SESSION_LOG"
 fi
+
+exec dtach -A "$SOCKET" /usr/bin/script -q -f -a "$SESSION_LOG" -c "/usr/local/bin/agy"

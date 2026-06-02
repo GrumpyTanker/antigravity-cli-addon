@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl bash ttyd tmux jq git nano ca-certificates lrzsz nginx python3 python3-pexpect nodejs npm locales && \
+    curl bash ttyd tmux dtach jq git nano ca-certificates lrzsz nginx python3 python3-pexpect nodejs npm locales && \
     locale-gen en_US.UTF-8 && \
     rm -rf /var/lib/apt/lists/*
 

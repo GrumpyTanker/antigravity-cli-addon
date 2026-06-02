@@ -710,44 +710,25 @@
       } catch(e) {}
     }
 
-    const iframe = document.getElementById('term-frame');
-    iframe.onload = () => {
-      try {
-        const iframeWin = iframe.contentWindow;
-        const iframeDoc = iframeWin.document;
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      // Touch handler: Instant response, prevents zoom/scroll, prevents double click
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevent native touch behaviors and subsequent click event
+          document.getElementById('extra-keys-menu').classList.remove('show');
         
-        document.querySelectorAll('.tool-btn').forEach(btn => {
-          const handler = (e) => {
-            e.preventDefault(); 
-            
-            // Special case for Paste button
-            if (btn.classList.contains('paste-menu-btn')) {
-               if (typeof window.pasteFromClipboard === 'function') {
-                   window.pasteFromClipboard();
-               }
-               return;
-            }
-
-            const target = iframeDoc.querySelector('.xterm-helper-textarea') || iframeDoc.querySelector('.xterm-screen');
-            if (!target) return;
-
-            const key = btn.getAttribute('data-key');
-            if (key) {
-               const code = btn.getAttribute('data-code') ? parseInt(btn.getAttribute('data-code')) : null;
-               const isCtrl = btn.getAttribute('data-ctrl') === 'true';
-               
-               let realKey = key;
-               if (key === 'CtrlC') realKey = 'c';
-               if (key === 'CtrlD') realKey = 'd';
-               if (key === 'CtrlZ') realKey = 'z';
-               
-               target.dispatchEvent(new KeyboardEvent('keydown', {
-                   key: realKey, code: realKey, keyCode: code, which: code, ctrlKey: isCtrl, bubbles: true
-               }));
-               return;
-            }
-
-            const cmd = btn.getAttribute('data-cmd');
+        const key = btn.getAttribute('data-key');
+        const cmd = btn.getAttribute('data-cmd');
+        
+        if (key || cmd) {
+          // Terminal macro button
+          const code = parseInt(btn.getAttribute('data-code') || '0');
+          const isCtrl = btn.getAttribute('data-ctrl') === 'true';
+          const theIframe = document.getElementById('term-frame');
+          const iframeDoc = theIframe && theIframe.contentWindow ? theIframe.contentWindow.document : null;
+          if (!iframeDoc) return;
+          const target = iframeDoc.querySelector('.xterm-helper-textarea') || iframeDoc.querySelector('.xterm-screen');
+          
+          if (target) {
             if (cmd) {
               const dt = new DataTransfer();
               dt.setData('text/plain', cmd + '\r');
@@ -759,12 +740,75 @@
               setTimeout(() => {
                 target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
               }, 10);
-              return;
+            } else {
+              target.dispatchEvent(new KeyboardEvent('keydown', {
+                key: key,
+                code: key,
+                keyCode: code,
+                ctrlKey: isCtrl,
+                bubbles: true
+              }));
             }
-          };
-          btn.addEventListener('touchstart', handler, { passive: false });
-          btn.addEventListener('mousedown', handler);
-        });
+          }
+        } else if (btn.classList.contains('paste-menu-btn')) {
+          if (typeof window.pasteFromClipboard === 'function') {
+            window.pasteFromClipboard();
+          }
+        } else {
+          // Standard button (Logo, Import, Export)
+          btn.click();
+        }
+      }, { passive: false });
+      
+      // Mouse handler: Prevent focus loss for terminal buttons
+      btn.addEventListener('mousedown', (e) => {
+        const key = btn.getAttribute('data-key');
+        const cmd = btn.getAttribute('data-cmd');
+        
+        if (key || cmd || btn.classList.contains('paste-menu-btn')) {
+          e.preventDefault(); // Prevent losing focus on textarea
+            document.getElementById('extra-keys-menu').classList.remove('show');
+          
+          const code = parseInt(btn.getAttribute('data-code') || '0');
+          const isCtrl = btn.getAttribute('data-ctrl') === 'true';
+          const theIframe = document.getElementById('term-frame');
+          const iframeDoc = theIframe && theIframe.contentWindow ? theIframe.contentWindow.document : null;
+          if (!iframeDoc) return;
+          const target = iframeDoc.querySelector('.xterm-helper-textarea') || iframeDoc.querySelector('.xterm-screen');
+          
+          if (target) {
+            if (cmd) {
+              const dt = new DataTransfer();
+              dt.setData('text/plain', cmd + '\r');
+              target.dispatchEvent(new ClipboardEvent('paste', {
+                  clipboardData: dt,
+                  bubbles: true,
+                  cancelable: true
+              }));
+              setTimeout(() => {
+                target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+              }, 10);
+            } else {
+              target.dispatchEvent(new KeyboardEvent('keydown', {
+                key: key,
+                code: key,
+                keyCode: code,
+                ctrlKey: isCtrl,
+                bubbles: true
+              }));
+            }
+          }
+        }
+      });
+    });
+
+    const iframe = document.getElementById('term-frame');
+    iframe.onload = () => {
+      try {
+        const iframeWin = iframe.contentWindow;
+        const iframeDoc = iframeWin.document;
+        
+
         
         const interval = setInterval(() => {
           const viewport = iframeDoc.querySelector('.xterm-viewport');
@@ -819,114 +863,77 @@
               observer.observe(xtermContainer, { childList: true });
             }
             
-            const FRICTION = 0.95; // Lower friction for longer coasting
-            const MIN_VELOCITY = 0.1;
+            const FRICTION = 0.97;
+            const MIN_VELOCITY = 0.3;
             
-            let lastY = 0, velocity = 0;
+            let lastY = 0, lastTime = 0, velocity = 0;
             let animId = null, tracking = false;
-            let lastAnimTime = 0;
-            let touchHistory = [];
             
-            // Prevent browser from stealing the swipe and firing touchcancel
-            screen.style.touchAction = 'none';
-            
-            function coast(time) {
-              if (!lastAnimTime) lastAnimTime = time;
-              const dt = time - lastAnimTime;
-              lastAnimTime = time;
-              
-              const frames = dt / 16.666;
-              velocity *= Math.pow(FRICTION, frames);
-              
+            function coast() {
+              velocity *= FRICTION;
               if (Math.abs(velocity) < MIN_VELOCITY) { animId = null; return; }
-              
-              viewport.scrollTop += velocity * frames;
-              animId = window.requestAnimationFrame(coast);
+              viewport.scrollTop += velocity;
+              animId = iframeWin.requestAnimationFrame(coast);
             }
-
-            screen.addEventListener('touchstart', (e) => {
-              if (animId) {
-                window.cancelAnimationFrame(animId);
-                animId = null;
-              }
-              if (e.touches.length !== 1) return;
-              
-              tracking = true;
-              lastY = e.touches[0].clientY;
+            
+            function stop() {
+              if (animId) { iframeWin.cancelAnimationFrame(animId); animId = null; }
               velocity = 0;
-              touchHistory = [{ y: lastY, time: performance.now() }];
-            }, { passive: true, capture: true });
-
+            }
+            
+            screen.addEventListener('touchstart', (e) => {
+              if (e.touches.length !== 1) return;
+              stop();
+              lastY = e.touches[0].clientY;
+              lastTime = performance.now();
+              tracking = true;
+            }, { passive: false, capture: true });
+            
             screen.addEventListener('touchmove', (e) => {
-              if (!tracking) return;
+              if (!tracking || e.touches.length !== 1) return;
               const y = e.touches[0].clientY;
               const now = performance.now();
-              const dy = lastY - y; 
+              const dt = now - lastTime;
+              const dy = lastY - y; // positive = finger up = scroll down
               
-              touchHistory.push({ y: y, time: now });
-              touchHistory = touchHistory.filter(point => now - point.time < 100);
+              // Track velocity for momentum
+              if (dt > 0) {
+                const v = (dy / dt) * 16; // normalize to ~60fps
+                velocity = velocity * 0.2 + v * 0.8;
+              }
               
-              lastY = y;
+              // Move viewport immediately
               viewport.scrollTop += dy;
               
+              lastY = y;
+              lastTime = now;
               e.preventDefault();
               e.stopImmediatePropagation();
             }, { passive: false, capture: true });
             
-            const handleTouchEnd = () => {
+            screen.addEventListener('touchend', () => {
               if (!tracking) return;
               tracking = false;
-              
-              const now = performance.now();
-              touchHistory = touchHistory.filter(point => now - point.time < 100);
-              
-              if (touchHistory.length > 1) {
-                const oldest = touchHistory[0];
-                const newest = touchHistory[touchHistory.length - 1];
-                const dt = newest.time - oldest.time;
-                const dy = oldest.y - newest.y; 
-                
-                if (dt > 0) {
-                  velocity = (dy / dt) * 16.666; 
-                } else {
-                  velocity = 0;
-                }
-              } else {
-                velocity = 0;
-              }
-              
               if (Math.abs(velocity) > MIN_VELOCITY) {
-                lastAnimTime = 0;
-                animId = window.requestAnimationFrame(coast);
+                animId = iframeWin.requestAnimationFrame(coast);
               }
-            };
+            }, { passive: false, capture: true });
             
-            screen.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
-            screen.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
+            screen.addEventListener('touchcancel', () => {
+              tracking = false; stop();
+            }, { passive: false, capture: true });
             
-            let wasAtBottom = false;
-            
-            viewport.addEventListener('scroll', () => {
-              wasAtBottom = (viewport.scrollTop + viewport.clientHeight) >= (viewport.scrollHeight - 10);
-            }, { passive: true });
-            
-            const scrollToBottom = () => {
-              if (viewport && wasAtBottom) viewport.scrollTop = viewport.scrollHeight;
-            };
-            
-            // Only enable auto-scroll after initial render settles (for mobile keyboard close)
-            setTimeout(() => { wasAtBottom = true; }, 2000);
-            
-            iframeWin.addEventListener('resize', () => {
-              if (wasAtBottom) {
-                [10, 50, 150].forEach(delay => setTimeout(scrollToBottom, delay));
-              }
-            });
-            
-            const resizeObserver = new ResizeObserver(() => {
-              if (wasAtBottom) scrollToBottom();
-            });
-            resizeObserver.observe(viewport);
+                          // Force scroll to bottom on load (as data streams in from ttyd)
+              [100, 300, 600, 1000].forEach(delay => {
+                setTimeout(() => {
+                  if (viewport) viewport.scrollTop = viewport.scrollHeight;
+                }, delay);
+              });
+              
+              // Force scroll to bottom when window resizes (e.g., closing Android keyboard)
+              iframeWin.addEventListener('resize', () => {
+                [10, 50, 150, 300, 500].forEach(delay => { setTimeout(() => { if (viewport) viewport.scrollTop = viewport.scrollHeight; }, delay); });
+              });
           }
         }, 500);
       } catch(err) {

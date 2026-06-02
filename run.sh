@@ -42,7 +42,12 @@ echo "Ingress URL is $INGRESS_URL"
 python3 /opt/antigravity/upload.py &
 
 # Run the CLI via dtach to support session persistence natively without alternate screen (perfect mobile scrolling)
-# The dtach sessions are now created lazily by attach.sh on demand
+for log in /data/session_*.log; do
+  if [ -f "$log" ]; then
+    tail -n 10000 "$log" > "${log}.tmp"
+    mv "${log}.tmp" "$log"
+  fi
+done
 export COLORTERM=truecolor
 export TERM=xterm-256color
 
@@ -77,8 +82,8 @@ fi
 # Set the environment variable so agy picks up the MCP configuration
 export MCP_CONFIG_PATH=/homeassistant/mcp.json
 
-# Using disableResizeOverlay=true removes the annoying 100x40 banner
-ttyd -a -b /ttyd -t enableZmodem=true -t disableLeaveAlert=true -t disableResizeOverlay=true -t 'theme={"background": "#2b2b2b"}' -p 62898 /opt/antigravity/attach.sh &
+# Using disableResizeOverlay=true -t scrollback=10000 removes the annoying 100x40 banner
+ttyd -a -b /ttyd -t enableZmodem=true -t disableLeaveAlert=true -t disableResizeOverlay=true -t scrollback=10000 -t 'theme={"background": "#2b2b2b"}' -p 62898 /opt/antigravity/attach.sh &
 
 echo "Starting NGINX reverse proxy on port 62899..."
 exec nginx -c /etc/nginx/nginx.conf -g "daemon off;"

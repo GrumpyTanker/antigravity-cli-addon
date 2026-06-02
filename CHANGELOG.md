@@ -1,3 +1,9 @@
+## [1.8.6] - 2026-06-03
+### Fixed
+- Fixed critical mobile scroll bug by completely reverting terminal core from tmux back to dtach+script while maintaining full multi-tab support.
+- Fixed a bug where closing the Android keyboard caused the terminal to snap to the top instead of the bottom by unconditionally enforcing multiple timed scroll resets.
+- Fixed an issue where the contextual extra keys menu would remain open after interacting with a tool button.
+- Cleaned up Dockerfile missing dependencies from the tmux-to-dtach migration.
 # Changelog
 
 ## [1.8.3]
