@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.6.0]
+## [1.8.0]
 - feat: Full Backup and Restore system with blurred UI modals
 - feat: Streaming tar export and import to prevent RAM/disk exhaustion
 - feat: Add Wiki and Documentation architecture
