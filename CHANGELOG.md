@@ -2,7 +2,9 @@
 
 All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
 
-## [1.7.7]
+## [1.7.8]
+- chore: release v1.7.8 with Import/Export Backup tool
+- docs: remove localdev references from changelog
 - feat: implement automatic addon restart on successful backup restore
 - feat: add Import/Export backup tool for agent memory and addon configs
 - docs: use python script to generate full chronological changelog with all version tags
