@@ -810,12 +810,7 @@
         
 
         
-        const interval = setInterval(() => {
-          const viewport = iframeDoc.querySelector('.xterm-viewport');
-          const screen = iframeDoc.querySelector('.xterm-screen');
-          
-          if (viewport && screen) {
-            clearInterval(interval);
+        const interval = setInterval(() => { const viewport = iframeDoc.querySelector('.xterm-viewport'); const screen = iframeDoc.querySelector('.xterm-screen'); if (viewport && screen && !screen.dataset.scrollAttached) { screen.dataset.scrollAttached = 'true';
             
             const fixTextarea = () => {
               const ta = iframeDoc.querySelector('.xterm-helper-textarea');
