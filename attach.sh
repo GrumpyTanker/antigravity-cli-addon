@@ -13,4 +13,4 @@ if [ -f "$SESSION_LOG" ]; then
     cat "$SESSION_LOG"
 fi
 
-exec dtach -A "$SOCKET" -r none /usr/bin/script -q -f -a "$SESSION_LOG" -c "/usr/local/bin/agy"
+exec dtach -A "$SOCKET" -r winch /usr/bin/script -q -f -a "$SESSION_LOG" -c "/usr/local/bin/agy"
