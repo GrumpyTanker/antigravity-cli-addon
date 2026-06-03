@@ -8,6 +8,7 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANGUAGE=en_US:en
 
+# Siempre imprime el historial completo al conectar
 if [ -f "$SESSION_LOG" ]; then
     cat "$SESSION_LOG"
 fi
