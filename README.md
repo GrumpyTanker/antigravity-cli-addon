@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
   <img src="https://raw.githubusercontent.com/Aaronhrndz/antigravity-cli-addon/main/logo.png" alt="Antigravity Logo" width="120"/>
 
   # Antigravity CLI Add-on for Home Assistant

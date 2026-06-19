@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
 
