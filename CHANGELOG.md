@@ -1,42 +1,56 @@
-## [1.8.7]
-- feat: Refactor mobile context menu layout into a visually centered 4-row grid
-- feat: Add macro buttons for slash commands (/config, /grill-me, /clear) to the context menu
-## [1.8.6]
-- fix: Make touch scroll listener robust to DOM recreation by tracking dataset instead of clearing interval
-- fix: Change dtach redraw method to 'winch' to prevent clearing of terminal scrollback buffer on reconnect
-- fix: Re-add check for session log existence before printing history on connect
-- fix: Use proper dtach syntax (dtach -A socket -r mode)
+# Changelog
 
-## [1.8.5]
-- feat: Remove tmux completely and revert to dtach + script for perfect native scroll and session persistence without alternate screen buffer conflicts
-- chore: Remove ResizeObserver polling that interfered with scroll tracking
+All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
+
+## [1.8.9]
+- feat: Move Home and End to D-pad menu and sync lite version
+- docs: update changelog
+
+## [1.8.8]
+- feat: Fix mobile horizontal scroll, add D-pad context menu, and optimize layout
+- Fix scroll observer and add PAGER=cat
+
+## [1.8.6]
+- Bump version to 1.8.6 in config.yaml
 
 ## [1.8.4]
-- revert: Reverted to tmux implementation temporarily during diagnostic phase
-## [1.8.6] - 2026-06-03
-### Fixed
-- Fixed critical mobile scroll bug by completely reverting terminal core from tmux back to dtach+script while maintaining full multi-tab support.
-- Fixed a bug where closing the Android keyboard caused the terminal to snap to the top instead of the bottom by unconditionally enforcing multiple timed scroll resets.
-- Fixed an issue where the contextual extra keys menu would remain open after interacting with a tool button.
-- Cleaned up Dockerfile missing dependencies from the tmux-to-dtach migration.
-# Changelog
+- Bump version to 1.8.6: Restore dtach native scrolling, fix keyboard snap, fix menu auto-close
+- docs: update wiki with new port architecture and chunked upload system
+- fix: update import completion message to reflect automatic restart
 
 ## [1.8.3]
 - fix: reduce backup upload chunk size to 10MB to comply with Home Assistant Ingress hard 16MB request body limit
 
 ## [1.8.2]
-- feat: implement 100MB chunked multipart uploads to bypass Home Assistant Ingress timeout and memory limits for massive backups
+- docs: update changelog and bump version to 1.8.2
+- feat: implement chunked upload (100MB) to bypass ingress limits
+- fix: add proxy_request_buffering off and timeouts to nginx
 
 ## [1.8.1]
-- fix: change internal proxy ports to 62897-62899 to avoid host_network conflicts
-- fix: remove nginx client_max_body_size limit for large backups
+- fix: change default ports to rare range and remove max upload size limit for large backups
+- docs: fix encoding issue with book emoji in README
+
 ## [1.8.0]
-- feat: Full Backup and Restore system with blurred UI modals
-- feat: Streaming tar export and import to prevent RAM/disk exhaustion
-- feat: Add Wiki and Documentation architecture
-- fix: Correct touch physics and UI button scaling
-- fix: Remove contextMenu blocks preventing proper desktop interaction
-All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
+- chore: bump version to 1.8.0 to fix HA supervisor update detection
+- docs: replace appended wiki with a link to WIKI.md in README
+- style: add undo subtitle to ctrl+z button
+- fix: prevent severe RAM exhaustion on file upload and download
+
+## [1.6.0]
+- chore: release version 1.6.0 with backup system
+- fix: hide progress bar during export as it is indeterminate
+- feat: add progress bar and readable stream tracking for backup/restore modals
+- chore: remove .ai_instructions from git tracking and update gitignore
+- fix: resolve js ReferenceError preventing backup modal and append WIKI to README
+- docs: add Wiki documentation for project architecture
+- Revert button text changes
+- fix: fixed modal positioning and button styling
+- fix: move modal to body root to fix layout bugs
+- fix: add loading modal and fix button names
+- fix: limit backup scope to .gemini folders
+- fix: stream tar to avoid OOM and update button labels
+- fix: add cache-busting headers for index.html
+- chore: revert version to localdev
 
 ## [1.7.8]
 - chore: release v1.7.8 with Import/Export Backup tool
@@ -372,4 +386,3 @@ All notable changes to the Antigravity CLI Home Assistant Add-on will be documen
 
 ## [1.0.3]
 - Initial commit: Antigravity CLI Add-on v1.0.3
-
