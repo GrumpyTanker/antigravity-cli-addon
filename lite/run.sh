@@ -8,6 +8,13 @@ export LANGUAGE=en_US:en
 echo "Starting Antigravity CLI Add-on..."
 
 # Create configuration directory for MCP
+mkdir -p /data/.gemini
+
+if [ -d "/homeassistant/gemini_backup" ] && [ ! -d "/data/.gemini/antigravity-cli" ]; then
+    echo "Found automated backup in /homeassistant/gemini_backup. Restoring..."
+    cp -a /homeassistant/gemini_backup/* /data/.gemini/
+fi
+
 mkdir -p /data/.gemini/antigravity-cli
 
 # Configure readline for Spanish/UTF-8 character input (no meta conversion)
