@@ -16,6 +16,15 @@ if [ -d "/homeassistant/gemini_backup" ] && [ ! -d "/data/.gemini/antigravity-cl
 fi
 
 mkdir -p /data/.gemini/antigravity-cli
+# Auto-configure git credentials from persistent storage
+if [ -f "/data/.github_pat" ]; then
+    GH_PAT=$(cat /data/.github_pat)
+    git config --global credential.helper store
+    echo "https://GrumpyTanker:${GH_PAT}@github.com" > /root/.git-credentials
+    chmod 600 /root/.git-credentials
+    echo "Git credentials configured from /data/.github_pat"
+fi
+
 
 # Configure readline for Spanish/UTF-8 character input (no meta conversion)
 cat << 'EOF' > /data/.inputrc
