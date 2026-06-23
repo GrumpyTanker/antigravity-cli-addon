@@ -467,6 +467,7 @@
       <button id="main-action-btn" class="tool-btn" style="color: #ffffff; padding: 4px; flex-shrink: 0;" onclick="toggleContextMenu(event)">
         <img src="logo.png" class="footer-logo" style="width: 24px; height: 24px; border-radius: 4px; pointer-events: none;" alt="Logo">
       </button>
+      <span style="font-size: 9px; font-weight: 700; color: #4a9eff; background: rgba(74,158,255,0.12); border: 1px solid rgba(74,158,255,0.3); border-radius: 4px; padding: 1px 5px; letter-spacing: 0.5px; flex-shrink: 0; user-select: none;">GT Dev</span>
       <div class="desktop-only-text" style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 16px; user-select: none;">
         <div style="display: flex; align-items: center; gap: 6px; opacity: 0.8;">
           <span style="font-size: 10px; color: #888; font-weight: 600; letter-spacing: 0.5px;">COPY</span>
@@ -985,6 +986,11 @@
               tracking = false; stop();
             }, { passive: false, capture: true });
             
+            const isNearBottom = () => {
+                if (!viewport) return true;
+                return viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 150;
+            };
+
             const scrollToBottom = () => {
                 if (iframeWin.term && typeof iframeWin.term.scrollToBottom === 'function') {
                   iframeWin.term.scrollToBottom();
@@ -996,22 +1002,32 @@
 
             // Debounce the initial data dump: wait for all text to finish streaming, then scroll to bottom EXACTLY ONCE.
             let streamStabilizeTimer = null;
+            let stabilizeMutationCount = 0;
             const stabilizeObserver = new MutationObserver(() => {
+              stabilizeMutationCount++;
               clearTimeout(streamStabilizeTimer);
               streamStabilizeTimer = setTimeout(() => {
                 scrollToBottom();
                 stabilizeObserver.disconnect(); // Never interfere again after the initial load
               }, 500);
+              // Safety cap: disconnect after 50 mutations regardless
+              if (stabilizeMutationCount > 50) {
+                clearTimeout(streamStabilizeTimer);
+                stabilizeObserver.disconnect();
+              }
             });
-            
+
             const rowsContainer = iframeDoc.querySelector('.xterm-rows') || screen;
             if (rowsContainer) {
               stabilizeObserver.observe(rowsContainer, { childList: true, subtree: true, characterData: true });
             }
-              
-            // Force scroll to bottom unconditionally when window resizes (e.g., closing Android keyboard)
+
+            // Only scroll to bottom on resize if user was already at the bottom
+            // (e.g. keyboard closing shouldn't yank them away from scrolled-up content)
             iframeWin.addEventListener('resize', () => {
-                [10, 50, 150, 300, 500].forEach(delay => { setTimeout(scrollToBottom, delay); });
+                if (isNearBottom()) {
+                  setTimeout(scrollToBottom, 150);
+                }
               });
           }
         }, 500);
