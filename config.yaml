@@ -1,8 +1,8 @@
 name: "Antigravity CLI (Dev Fork)"
 description: "AI Agent with total control over domotics via Home Assistant Supervisor API"
 version: "1.8.9"
-slug: "antigravity_cli"
-panel_icon: "mdi:triangle"
+slug: "antigravity_cli_dev"
+panel_icon: mdi:triangle-outline
 panel_title: "Antigravity"
 arch:
   - aarch64
@@ -14,7 +14,6 @@ homeassistant_api: true
 host_network: true
 ingress: true
 ingress_port: 62899
-panel_icon: mdi:triangle-outline
 icon: true
 logo: true
 map:
@@ -32,4 +31,3 @@ schema:
   mqtt_port: "str?"
   mqtt_user: "str?"
   mqtt_pass: "password?"
-
