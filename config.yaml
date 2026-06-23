@@ -1,4 +1,4 @@
-name: "Antigravity CLI"
+name: "Antigravity CLI (Dev Fork)"
 description: "AI Agent with total control over domotics via Home Assistant Supervisor API"
 version: "1.8.9"
 slug: "antigravity_cli"
