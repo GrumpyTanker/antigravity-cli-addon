@@ -2,6 +2,10 @@
 
 All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
 
+## [1.9.0]
+- feat: Bump version to 1.9.0
+
+
 ## [1.8.9]
 - feat: Move Home and End to D-pad menu and sync lite version
 - docs: update changelog
