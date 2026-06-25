@@ -922,14 +922,11 @@
                       node.style.display = 'none';
                     } else if (text.includes('Reconnect') || text.includes('Closed')) {
                       node.style.display = 'none';
+                      // Auto-reconnect by reloading the iframe cleanly instead of 
+                      // injecting simulated Enter keypresses which swallow user input.
                       setTimeout(() => {
-                        const textarea = iframeDoc.querySelector('.xterm-helper-textarea');
-                        if (textarea) {
-                          textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
-                        } else {
-                          screen.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
-                        }
-                      }, 500);
+                        iframeWin.location.reload();
+                      }, 1000);
                     }
                   }
                 });

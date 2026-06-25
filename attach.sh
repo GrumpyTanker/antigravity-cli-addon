@@ -8,9 +8,9 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANGUAGE=en_US:en
 
-# Siempre imprime el historial completo al conectar
+# Siempre imprime el historial reciente al conectar
 if [ -f "$SESSION_LOG" ]; then
-    cat "$SESSION_LOG"
+    tail -n 1000 "$SESSION_LOG"
     # Print a reset sequence to recover the terminal from truncated ANSI codes
     # This ensures a hard server crash doesn't leave the UI hung on reconnect
     printf "\033[0m\033[?25h\n\n--- Session Reconnected ---\n\n"
