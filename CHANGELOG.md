@@ -2,6 +2,12 @@
 
 All notable changes to the Antigravity CLI Home Assistant Add-on will be documented in this file.
 
+## [1.9.1] - 2026-06-25
+
+### Fixes
+- fix: Prevent UI freeze on refresh by limiting dtach session history to 1000 lines
+- fix: Fix terminal auto-reconnect dropping user keyboard input by reloading iframe instead of injecting Enter keypresses
+
 ## [1.9.0] - 2026-06-24
 
 ### GrumpyTanker Dev Fork Rebrand & Stability Release
