@@ -1022,9 +1022,10 @@
                 scrollToBottom();
                 stabilizeObserver.disconnect(); // Never interfere again after the initial load
               }, 500);
-              // Safety cap: disconnect after 50 mutations regardless
+              // Safety cap: disconnect after 50 mutations regardless, but ensure it scrolls!
               if (stabilizeMutationCount > 50) {
                 clearTimeout(streamStabilizeTimer);
+                setTimeout(scrollToBottom, 500);
                 stabilizeObserver.disconnect();
               }
             });
